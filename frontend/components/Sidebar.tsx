@@ -41,18 +41,6 @@ export default function Sidebar({ health, onExampleClick, onClearChat }: Sidebar
         />
       </div>
 
-      {/* Status + LLM badge */}
-      <div className="px-5 py-4 border-b border-border flex flex-col gap-2">
-        <div className="flex items-center gap-2">
-          <span
-            className={`w-2 h-2 rounded-full flex-shrink-0 ${isConnected ? 'bg-emerald-500' : 'bg-red-500'}`}
-            aria-label={isConnected ? 'Connected' : 'Offline'}
-          />
-          <span className={`text-xs font-medium ${isConnected ? 'text-emerald-600' : 'text-hdfc-red'}`}>
-            {isConnected ? 'Connected' : 'Offline'}
-          </span>
-        </div>
-      </div>
 
       {/* In-scope schemes */}
       <div className="px-5 py-4 border-b border-border">
