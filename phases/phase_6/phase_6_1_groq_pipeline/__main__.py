@@ -36,7 +36,8 @@ from .app import app
 
 if __name__ == "__main__":
     load_dotenv()  # Load environment variables from .env
-    port = int(os.environ.get("API_PORT", 8001))
+    # Render injects PORT; fall back to API_PORT then 8001 for local dev
+    port = int(os.environ.get("PORT") or os.environ.get("API_PORT", 8001))
     uvicorn.run(
         app,
         host="0.0.0.0",
