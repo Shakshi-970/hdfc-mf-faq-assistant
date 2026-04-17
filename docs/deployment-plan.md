@@ -5,7 +5,7 @@
 | Layer | Platform | Purpose |
 |---|---|---|
 | Daily ingestion scheduler | GitHub Actions | Scrape → chunk → embed → upsert to Chroma Cloud |
-| Backend API | Render | FastAPI + Groq LLM query pipeline |
+| Backend API | Railway | FastAPI + Groq LLM query pipeline |
 | Frontend UI | Vercel | Next.js 14 chat interface |
 
 ---
@@ -86,11 +86,9 @@ Render will call **GET /health** to verify the service is up. The FastAPI backen
 - The backend **does not need** a `Dockerfile` — Render's native Python runtime handles it directly.
 
 ### Backend URL
-After deployment, Render provides a URL like:
 ```
-https://mf-faq-backend.onrender.com
+https://hdfc-mf-faq-assistant.onrender.com
 ```
-Copy this — it is needed for the Vercel frontend configuration.
 
 ---
 
@@ -116,7 +114,7 @@ Add under **Settings → Environment Variables**:
 
 | Key | Value |
 |---|---|
-| `NEXT_PUBLIC_API_URL` | `https://mf-faq-backend.onrender.com` |
+| `NEXT_PUBLIC_API_URL` | `https://hdfc-mf-faq-assistant.onrender.com` |
 
 > Set this for **Production**, **Preview**, and **Development** environments.
 
@@ -138,7 +136,7 @@ GitHub Actions (09:15 AM IST daily)
     ↓ scrape → chunk → embed → upsert
 Chroma Cloud (mf_faq_chunks collection)
     ↑ retrieval queries
-Render — FastAPI backend (https://mf-faq-backend.onrender.com)
+Render — FastAPI backend (https://hdfc-mf-faq-assistant.onrender.com)
     ↑ REST API calls (/sessions/new, /chat/{id})
 Vercel — Next.js frontend (https://mf-faq-ui.vercel.app)
     ↑ user queries
@@ -159,7 +157,7 @@ CHROMA_DATABASE=Demo
 
 ### Vercel (frontend)
 ```
-NEXT_PUBLIC_API_URL=https://mf-faq-backend.onrender.com
+NEXT_PUBLIC_API_URL=https://hdfc-mf-faq-assistant.onrender.com
 ```
 
 ### GitHub Actions (ingestion)
