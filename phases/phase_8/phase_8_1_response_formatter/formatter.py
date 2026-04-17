@@ -113,10 +113,7 @@ def format_response(
     # 2. Cap to 3 sentences.
     body = _cap_sentences(body, max_sentences=3)
 
-    # 3. Append canonical Source and footer lines from chunk metadata.
-    parts = [body]
-    if source_url:
-        parts.append(f"Source: {source_url}")
-    if ingestion_date:
-        parts.append(f"Last updated from sources: {ingestion_date}")
-    return '\n\n'.join(parts)
+    # 3. Only append source URL when the chatbot couldn't find the answer.
+    if source_url and _NO_INFO_PATTERNS.search(body):
+        return f"{body}\n\nSource: {source_url}"
+    return body
