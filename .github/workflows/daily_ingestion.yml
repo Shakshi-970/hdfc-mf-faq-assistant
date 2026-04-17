@@ -91,7 +91,23 @@ jobs:
         #   - Metadata tagger    → attach chunk_id (SHA-256), source_url, scheme_name,
         #                          field_type, ingestion_date, ingestion_time
         #   - Embedder           → BAAI/bge-small-en-v1.5, 384-dim, batch=32, no API key
-        # Writes phases/phase_3_2_chunking_embedding/embedded_chunks.json.
+        # Writes phases/phase_3/phase_3_2_chunking_embedding/embedded_chunks.json.
+
+      - name: "Upload raw scrape artifact"
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ingest-raw
+          path: scraper/output/scraped_*.json
+          if-no-files-found: warn
+
+      - name: "Upload embedded chunks artifact"
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ingest-chunked
+          path: phases/phase_3/phase_3_2_chunking_embedding/embedded_chunks.json
+          if-no-files-found: warn
 
       # -----------------------------------------------------------------------
       # Step 4 — Upsert embeddings into Chroma Cloud
@@ -110,7 +126,15 @@ jobs:
         #   - Existing chunk with same ID → vector + metadata overwritten
         #   - New chunk                   → inserted
         #   - Absent chunk (URL failed)   → stale vector retained intentionally
-        # Writes phases/phase_3_2_chunking_embedding/last_run_report.json.
+        # Writes phases/phase_3/phase_3_2_chunking_embedding/last_run_report.json.
+
+      - name: "Upload upsert report artifact"
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ingest-chroma
+          path: phases/phase_3/phase_3_2_chunking_embedding/last_run_report.json
+          if-no-files-found: warn
 
       # -----------------------------------------------------------------------
       # Summary — always runs, even on failure
@@ -122,15 +146,11 @@ jobs:
           echo "## Ingestion Report — $(date -u '+%Y-%m-%d %H:%M UTC')" >> $GITHUB_STEP_SUMMARY
           echo "**Trigger:** scheduled cron (09:15 AM IST / 03:45 UTC)" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "| Step | Status |" >> $GITHUB_STEP_SUMMARY
-          echo "|---|---|" >> $GITHUB_STEP_SUMMARY
-          echo "| Scrape (phase_3_3) | ${{ steps.*.outcome }} |" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          if [ -f phases/phase_3_2_chunking_embedding/last_run_report.json ]; then
+          if [ -f phases/phase_3/phase_3_2_chunking_embedding/last_run_report.json ]; then
             echo "### Chunk + Embed + Upsert Report" >> $GITHUB_STEP_SUMMARY
             echo '```json' >> $GITHUB_STEP_SUMMARY
-            cat phases/phase_3_2_chunking_embedding/last_run_report.json >> $GITHUB_STEP_SUMMARY
+            cat phases/phase_3/phase_3_2_chunking_embedding/last_run_report.json >> $GITHUB_STEP_SUMMARY
             echo '```' >> $GITHUB_STEP_SUMMARY
           else
-            echo "> Pipeline failed before upsert completed — no report file generated." >> $GITHUB_STEP_SUMMARY
+            echo "> No upsert report found — pipeline may have failed before upsert completed." >> $GITHUB_STEP_SUMMARY
           fi
