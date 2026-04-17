@@ -18,6 +18,9 @@ on:
     branches: [main, develop]
   workflow_dispatch:
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true   # cancel stale runs when new commits are pushed
