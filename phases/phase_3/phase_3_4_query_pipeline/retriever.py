@@ -44,26 +44,19 @@ _collection = None
 def _get_model():
     global _model
     if _model is None:
-        from sentence_transformers import SentenceTransformer
-        logger.info("Loading embedding model '%s'...", EMBEDDING_MODEL)
-        try:
-            # Load from local cache without hitting HuggingFace (fast, no network)
-            _model = SentenceTransformer(EMBEDDING_MODEL, local_files_only=True)
-            logger.info("Embedding model loaded from local cache.")
-        except Exception:
-            # Not cached yet — download from HuggingFace (first-time only)
-            logger.info("Model not in cache, downloading from HuggingFace...")
-            _model = SentenceTransformer(EMBEDDING_MODEL)
-            logger.info("Embedding model downloaded and cached.")
+        from fastembed import TextEmbedding
+        logger.info("Loading embedding model '%s' via fastembed...", EMBEDDING_MODEL)
+        _model = TextEmbedding(EMBEDDING_MODEL)
+        logger.info("Embedding model loaded.")
     return _model
 
 
 def _embed_query(query: str) -> list[float]:
-    """Embed query text with BGE query prefix. Returns a 384-dim float list."""
+    """Embed query with BGE query prefix via fastembed. Returns a 384-dim float list."""
     model = _get_model()
-    prefixed = BGE_QUERY_PREFIX + query
-    vector = model.encode(prefixed, convert_to_numpy=True, show_progress_bar=False)
-    return vector.tolist()
+    # fastembed.query_embed() adds the BGE query prefix internally
+    vectors = list(model.query_embed([query]))
+    return vectors[0].tolist()
 
 
 # ---------------------------------------------------------------------------

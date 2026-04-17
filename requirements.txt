@@ -25,8 +25,8 @@ tiktoken==0.12.0
 # LangChain text splitter — RecursiveCharacterTextSplitter
 langchain-text-splitters==0.3.11
 
-# Embedding model — BAAI/bge-small-en-v1.5 (384-dim, local CPU)
-sentence-transformers==5.4.1
+# Embedding model for retrieval — ONNX-based, ~100 MB RAM (replaces sentence-transformers on backend)
+fastembed>=0.3.6
 
 # Vector store — Chroma Cloud (remote ChromaDB)
 chromadb==1.5.7
@@ -59,13 +59,10 @@ pydantic==2.11.3
 redis[hiredis]==5.2.1
 
 # ---------------------------------------------------------------------------
-# Phase 3.6: Chat UI
+# Phase 3.6: Chat UI (Next.js — no Python dependencies needed)
 # ---------------------------------------------------------------------------
 
-# Streamlit — web UI framework
-streamlit==1.44.1
-
-# HTTP client — used by Streamlit app to call the FastAPI backend
+# HTTP client — used for health checks and internal requests
 requests==2.32.3
 
 # ---------------------------------------------------------------------------

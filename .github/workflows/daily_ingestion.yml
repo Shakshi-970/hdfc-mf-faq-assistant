@@ -79,6 +79,9 @@ jobs:
       # Step 2 + 3 — Chunk scraped content and embed with bge-small-en-v1.5
       # -----------------------------------------------------------------------
 
+      - name: "Install sentence-transformers for embedding (ingestion only)"
+        run: pip install "sentence-transformers==5.4.1"
+
       - name: "Step 2/4 — Chunk and embed changed schemes"
         run: python -m phases.phase_3.phase_3_2_chunking_embedding.chunk_and_embed
         # Reads scraper/output/scraped_<date>.json.
