@@ -113,7 +113,10 @@ def format_response(
     # 2. Cap to 3 sentences.
     body = _cap_sentences(body, max_sentences=3)
 
-    # 3. Return formatted body only — source URL injection is handled by the
-    #    pipeline layer, which only exposes the URL when the answer is a no-info
-    #    response (i.e. the bot could not find relevant data).
-    return body
+    # 3. Append canonical Source and footer lines from chunk metadata.
+    parts = [body]
+    if source_url:
+        parts.append(f"Source: {source_url}")
+    if ingestion_date:
+        parts.append(f"Last updated from sources: {ingestion_date}")
+    return '\n\n'.join(parts)

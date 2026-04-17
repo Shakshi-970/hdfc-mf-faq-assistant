@@ -282,14 +282,10 @@ def run_query(session_id: str, query: str) -> dict:
     append_message(session_id, "user", query)
     append_message(session_id, "assistant", answer)
 
-    # Only expose source_url when the LLM could not answer from retrieved data.
-    # For factual answers the response is self-contained; the URL is only
-    # useful as a fallback redirect when the bot has no relevant information.
-    no_info = bool(_NO_INFO_PATTERNS.search(answer))
     return {
         "answer": answer,
-        "source_url": source_url if no_info else None,
-        "last_updated": ingestion_date if no_info else None,
+        "source_url": source_url,
+        "last_updated": ingestion_date,
         "query_class": query_class,
         "llm_provider": llm.provider_name,
         "session_id": session_id,

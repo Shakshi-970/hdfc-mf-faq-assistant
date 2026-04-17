@@ -26,7 +26,7 @@ import re
 # Applied in order; case-insensitive matching.
 
 _ABBREVIATIONS: list[tuple[re.Pattern, str]] = [
-    (re.compile(r'\bELSS\b', re.IGNORECASE),
+    (re.compile(r'\bELSS\b(?!\s+Tax\s+Saver)', re.IGNORECASE),
      'Equity Linked Savings Scheme ELSS'),
     (re.compile(r'\bNAV\b', re.IGNORECASE),
      'Net Asset Value NAV'),
