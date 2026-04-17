@@ -1,0 +1,76 @@
+# .github/workflows/ci.yml
+# Phase 10 — Continuous Integration
+#
+# Runs the full unit test suite on every push and pull request.
+# No API keys required — all external calls are mocked.
+#
+# Triggers:
+#   push         : any branch
+#   pull_request : targeting main or develop
+#   workflow_dispatch : manual run from the GitHub Actions UI
+
+name: CI — Unit Tests
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: [main, develop]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true   # cancel stale runs when new commits are pushed
+
+jobs:
+  test:
+    name: pytest (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12"]
+
+    steps:
+      # -----------------------------------------------------------------------
+      # Setup
+      # -----------------------------------------------------------------------
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      # -----------------------------------------------------------------------
+      # Run unit tests
+      # -----------------------------------------------------------------------
+
+      - name: Run unit tests
+        run: pytest -v --tb=short
+        # All 95+ tests run without any API keys:
+        #   test_classifier.py  — rule-based classifier (33 tests)
+        #   test_rewriter.py    — query rewriter (21 tests)
+        #   test_pipeline.py    — pipeline with mocked retriever + LLM (14 tests)
+        #   test_formatter.py   — response formatter + guardrail (27 tests)
+        #   test_gateway.py     — rate limiter + cache (17 tests)
+
+      # -----------------------------------------------------------------------
+      # Summary — always appended, even on failure
+      # -----------------------------------------------------------------------
+
+      - name: Write test summary
+        if: always()
+        run: |
+          echo "## CI Test Results — $(date -u '+%Y-%m-%d %H:%M UTC')" >> $GITHUB_STEP_SUMMARY
+          echo "**Python:** ${{ matrix.python-version }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Branch:** \`${{ github.ref_name }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Commit:** \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY

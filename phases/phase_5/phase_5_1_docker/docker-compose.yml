@@ -1,0 +1,88 @@
+# Mutual Fund FAQ Assistant — Docker Compose
+#
+# Run from repo root (docker compose reads .env automatically for ${VAR} substitution):
+#   docker compose -f phases/phase_5/phase_5_1_docker/docker-compose.yml up --build
+#
+# Stop:
+#   docker compose -f phases/phase_5/phase_5_1_docker/docker-compose.yml down
+#
+# Required .env variables at repo root:
+#   GROQ_API_KEY, CHROMA_API_KEY, CHROMA_TENANT, CHROMA_DATABASE
+#
+# Network topology (Phase 10 — API Gateway layer):
+#
+#   Client → Nginx :80 → FastAPI backend :8000
+#            (rate limit + proxy)
+#   Streamlit UI :8501 → Nginx :80 → FastAPI backend :8000
+
+name: mf-faq
+
+services:
+
+  # ── Redis — session store + query cache ──────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: mf-faq-redis
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # ── FastAPI backend (internal — not exposed directly in production) ───────
+  backend:
+    build:
+      context: ../../..                                          # repo root
+      dockerfile: phases/phase_5/phase_5_1_docker/Dockerfile.backend
+    image: mf-faq-backend:latest
+    container_name: mf-faq-backend
+    # Port 8000 exposed for local dev / direct access; in production all
+    # traffic should flow through the Nginx gateway on port 80.
+    ports:
+      - "8000:8000"
+    environment:
+      GROQ_API_KEY:      ${GROQ_API_KEY}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      CHROMA_API_KEY:    ${CHROMA_API_KEY}
+      CHROMA_TENANT:     ${CHROMA_TENANT}
+      CHROMA_DATABASE:   ${CHROMA_DATABASE}
+      REDIS_URL:         redis://redis:6379/0
+      LLM_PROVIDER:      ${LLM_PROVIDER:-groq}
+    depends_on:
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # ── Nginx API Gateway (Phase 10 — port 80) ───────────────────────────────
+  nginx:
+    build:
+      context: ../../..                                          # repo root
+      dockerfile: phases/phase_10/phase_10_1_api_gateway/Dockerfile.nginx
+    image: mf-faq-nginx:latest
+    container_name: mf-faq-nginx
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+
+  # ── Streamlit UI (port 8501) — routes via Nginx ──────────────────────────
+  ui:
+    build:
+      context: ../../..                                          # repo root
+      dockerfile: phases/phase_5/phase_5_1_docker/Dockerfile.ui
+    image: mf-faq-ui:latest
+    container_name: mf-faq-ui
+    ports:
+      - "8501:8501"
+    environment:
+      API_BASE_URL: http://nginx:80      # UI now goes through the gateway
+    depends_on:
+      - nginx
+    restart: unless-stopped

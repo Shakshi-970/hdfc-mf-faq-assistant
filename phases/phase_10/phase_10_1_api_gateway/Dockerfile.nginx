@@ -1,0 +1,22 @@
+# phases/phase_10/phase_10_1_api_gateway/Dockerfile.nginx
+# ---------------------------------------------------------
+# Thin Nginx reverse proxy image for the Mutual Fund FAQ Assistant.
+#
+# Build (from repo root):
+#   docker build -f phases/phase_10/phase_10_1_api_gateway/Dockerfile.nginx -t mf-faq-nginx .
+#
+# The nginx.conf is baked into the image at build time so the container
+# is fully self-contained — no volume mounts required in docker-compose.
+
+FROM nginx:1.27-alpine
+
+# Remove the default "welcome" config
+RUN rm /etc/nginx/conf.d/default.conf
+
+# Copy our custom config
+COPY phases/phase_10/phase_10_1_api_gateway/nginx.conf /etc/nginx/conf.d/mf_faq.conf
+
+# Nginx runs on port 80 — exposed by docker-compose
+EXPOSE 80
+
+# Default CMD from base image: nginx -g "daemon off;"

@@ -1,0 +1,41 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html {
+  scroll-behavior: smooth;
+}
+
+/* Light thin scrollbar */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+::-webkit-scrollbar-track {
+  background: #eef2f7;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #b0c0d8;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #8a9fc0;
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #b0c0d8 #eef2f7;
+}
+
+body {
+  background-color: #f5f7fa;
+  color: #1a2a3a;
+}
+
+/* Textarea resize none by default */
+textarea {
+  resize: none;
+}

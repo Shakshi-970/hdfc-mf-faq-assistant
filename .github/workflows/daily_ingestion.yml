@@ -1,0 +1,133 @@
+# .github/workflows/daily_ingestion.yml
+# Phase 3.1 — Daily Ingestion Scheduler
+#
+# Fires every day at 09:15 AM IST (03:45 UTC).
+# Full pipeline in strict order:
+#   Step 1 — Scrape   : fetch latest HTML from 5 Groww scheme pages
+#   Step 2 — Chunk    : normalise → split → atomic+recursive chunk → tag metadata
+#   Step 3 — Embed    : encode chunks with BAAI/bge-small-en-v1.5 (384-dim, local CPU)
+#   Step 4 — Upsert   : push embeddings to Chroma Cloud (mf_faq_chunks collection)
+#
+# Required GitHub secrets (Settings → Secrets and variables → Actions):
+#   CHROMA_API_KEY   — Chroma Cloud authentication key
+#
+# Required GitHub variables (Settings → Secrets and variables → Actions):
+#   CHROMA_TENANT    — Chroma Cloud tenant UUID
+#   CHROMA_DATABASE  — Chroma Cloud database name  (e.g. "Demo")
+#   GROWW_URLS       — (optional) newline/comma-separated URLs; falls back to config.py
+
+name: Daily Mutual Fund Data Ingestion
+
+on:
+  schedule:
+    - cron: '45 3 * * *'   # 03:45 UTC = 09:15 AM IST every day
+  workflow_dispatch:        # manual trigger from GitHub Actions UI
+
+concurrency:
+  group: ingestion
+  cancel-in-progress: false  # never abort a running ingestion mid-way
+
+jobs:
+  ingest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      # -----------------------------------------------------------------------
+      # Setup
+      # -----------------------------------------------------------------------
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip               # caches pip packages between runs
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Cache HuggingFace embedding model
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/huggingface/hub
+          key: hf-bge-small-en-v1.5-${{ runner.os }}
+        # Caches BAAI/bge-small-en-v1.5 (~130 MB) so it is only downloaded
+        # on the first run and reused on every subsequent daily run.
+
+      # -----------------------------------------------------------------------
+      # Step 1 — Scrape latest data from Groww scheme pages
+      # -----------------------------------------------------------------------
+
+      - name: "Step 1/4 — Scrape Groww scheme pages"
+        run: python -m phases.phase_3.phase_3_3_scraping_service.run
+        env:
+          GROWW_URLS: ${{ vars.GROWW_URLS }}
+        # Fetches 5 Groww scheme pages concurrently (httpx async).
+        # Runs change detection against yesterday's snapshots.
+        # Writes scraper/output/scraped_<date>.json — only changed schemes
+        # are marked _changed=True for downstream processing.
+        # Retries each URL up to 3× (backoff 2s, 4s, 8s).
+        # Exit code 1 if ALL URLs fail (triggers email alert).
+
+      # -----------------------------------------------------------------------
+      # Step 2 + 3 — Chunk scraped content and embed with bge-small-en-v1.5
+      # -----------------------------------------------------------------------
+
+      - name: "Step 2/4 — Chunk and embed changed schemes"
+        run: python -m phases.phase_3.phase_3_2_chunking_embedding.chunk_and_embed
+        # Reads scraper/output/scraped_<date>.json.
+        # Processes only schemes marked _changed=True.
+        # Pipeline per scheme:
+        #   - Text normaliser    → clean whitespace, HTML entities, currency symbols
+        #   - Field splitter     → route structured fields vs. free-text paragraphs
+        #   - Atomic chunker     → one sentence per structured field (NAV, TER, etc.)
+        #   - Recursive chunker  → 512-token / 64-token overlap for free-text
+        #   - Metadata tagger    → attach chunk_id (SHA-256), source_url, scheme_name,
+        #                          field_type, ingestion_date, ingestion_time
+        #   - Embedder           → BAAI/bge-small-en-v1.5, 384-dim, batch=32, no API key
+        # Writes phases/phase_3_2_chunking_embedding/embedded_chunks.json.
+
+      # -----------------------------------------------------------------------
+      # Step 4 — Upsert embeddings into Chroma Cloud
+      # -----------------------------------------------------------------------
+
+      - name: "Step 3/4 — Upsert embeddings to Chroma Cloud"
+        run: python -m phases.phase_3.phase_3_2_chunking_embedding.upsert
+        env:
+          CHROMA_API_KEY:  ${{ secrets.CHROMA_API_KEY }}
+          CHROMA_TENANT:   ${{ vars.CHROMA_TENANT }}
+          CHROMA_DATABASE: ${{ vars.CHROMA_DATABASE }}
+        # Reads embedded_chunks.json written by the previous step.
+        # Connects to Chroma Cloud via chromadb.CloudClient.
+        # Upserts all chunks into collection mf_faq_chunks (cosine space).
+        # Strategy: upsert-by-chunk_id (SHA-256 hash):
+        #   - Existing chunk with same ID → vector + metadata overwritten
+        #   - New chunk                   → inserted
+        #   - Absent chunk (URL failed)   → stale vector retained intentionally
+        # Writes phases/phase_3_2_chunking_embedding/last_run_report.json.
+
+      # -----------------------------------------------------------------------
+      # Summary — always runs, even on failure
+      # -----------------------------------------------------------------------
+
+      - name: "Step 4/4 — Write ingestion summary"
+        if: always()
+        run: |
+          echo "## Ingestion Report — $(date -u '+%Y-%m-%d %H:%M UTC')" >> $GITHUB_STEP_SUMMARY
+          echo "**Trigger:** scheduled cron (09:15 AM IST / 03:45 UTC)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Step | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|---|---|" >> $GITHUB_STEP_SUMMARY
+          echo "| Scrape (phase_3_3) | ${{ steps.*.outcome }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [ -f phases/phase_3_2_chunking_embedding/last_run_report.json ]; then
+            echo "### Chunk + Embed + Upsert Report" >> $GITHUB_STEP_SUMMARY
+            echo '```json' >> $GITHUB_STEP_SUMMARY
+            cat phases/phase_3_2_chunking_embedding/last_run_report.json >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+          else
+            echo "> Pipeline failed before upsert completed — no report file generated." >> $GITHUB_STEP_SUMMARY
+          fi

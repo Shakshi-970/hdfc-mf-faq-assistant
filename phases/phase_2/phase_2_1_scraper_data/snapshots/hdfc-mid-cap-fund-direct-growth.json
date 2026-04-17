@@ -1,0 +1,23 @@
+{
+  "scheme_name": "HDFC Mid-Cap Fund Direct Growth",
+  "source_url": "https://groww.in/mutual-funds/hdfc-mid-cap-fund-direct-growth",
+  "amc": "HDFC Mutual Fund",
+  "category": "Mid Cap",
+  "fields": {
+    "nav": null,
+    "min_sip": null,
+    "aum": null,
+    "expense_ratio": null,
+    "rating": null,
+    "exit_load": null,
+    "min_lumpsum": null,
+    "riskometer": null,
+    "benchmark": null,
+    "fund_manager": null,
+    "fund_house": null
+  },
+  "free_text": [],
+  "scraped_at": "2026-04-16T03:11:23.532831+05:30",
+  "ingestion_date": "2026-04-16",
+  "ingestion_time": "03:11"
+}

@@ -1,0 +1,86 @@
+{
+  "version": "1.0",
+  "description": "Golden Q&A set for evaluating the Mutual Fund FAQ RAG pipeline against all 5 HDFC schemes and all refusal classes.",
+  "questions": [
+
+    {"id": "q01", "query": "What is the expense ratio of HDFC Large Cap Fund?",
+     "expected_class": "factual", "expected_url_fragment": "hdfc-large-cap-fund-direct-growth",
+     "field": "expense_ratio", "category": "factual"},
+
+    {"id": "q02", "query": "What is the benchmark index of HDFC Large Cap Fund?",
+     "expected_class": "factual", "expected_url_fragment": "hdfc-large-cap-fund-direct-growth",
+     "field": "benchmark", "category": "factual"},
+
+    {"id": "q03", "query": "What is the minimum SIP amount for HDFC Large Cap Fund?",
+     "expected_class": "factual", "expected_url_fragment": "hdfc-large-cap-fund-direct-growth",
+     "field": "min_sip", "category": "factual"},
+
+    {"id": "q04", "query": "What is the NAV of HDFC Equity Fund Direct Growth?",
+     "expected_class": "factual", "expected_url_fragment": "hdfc-equity-fund-direct-growth",
+     "field": "nav", "category": "factual"},
+
+    {"id": "q05", "query": "What is the exit load for HDFC Equity Fund?",
+     "expected_class": "factual", "expected_url_fragment": "hdfc-equity-fund-direct-growth",
+     "field": "exit_load", "category": "factual"},
+
+    {"id": "q06", "query": "Who is the fund manager of HDFC Equity Fund?",
+     "expected_class": "factual", "expected_url_fragment": "hdfc-equity-fund-direct-growth",
+     "field": "fund_manager", "category": "factual"},
+
+    {"id": "q07", "query": "What is the lock-in period for HDFC ELSS Tax Saver Fund?",
+     "expected_class": "factual", "expected_url_fragment": "hdfc-elss-tax-saver-fund-direct-plan-growth",
+     "field": "lock_in", "category": "factual"},
+
+    {"id": "q08", "query": "Does HDFC ELSS qualify for Section 80C tax deduction?",
+     "expected_class": "factual", "expected_url_fragment": "hdfc-elss-tax-saver-fund-direct-plan-growth",
+     "field": "tax_benefit", "category": "factual"},
+
+    {"id": "q09", "query": "What is the minimum SIP amount for HDFC ELSS?",
+     "expected_class": "factual", "expected_url_fragment": "hdfc-elss-tax-saver-fund-direct-plan-growth",
+     "field": "min_sip", "category": "factual"},
+
+    {"id": "q10", "query": "What is the expense ratio of HDFC Mid-Cap Fund?",
+     "expected_class": "factual", "expected_url_fragment": "hdfc-mid-cap-fund-direct-growth",
+     "field": "expense_ratio", "category": "factual"},
+
+    {"id": "q11", "query": "What is the riskometer level of HDFC Mid-Cap Fund?",
+     "expected_class": "factual", "expected_url_fragment": "hdfc-mid-cap-fund-direct-growth",
+     "field": "riskometer", "category": "factual"},
+
+    {"id": "q12", "query": "What is the AUM of HDFC Mid-Cap Fund?",
+     "expected_class": "factual", "expected_url_fragment": "hdfc-mid-cap-fund-direct-growth",
+     "field": "aum", "category": "factual"},
+
+    {"id": "q13", "query": "What is the expense ratio of HDFC Focused Fund?",
+     "expected_class": "factual", "expected_url_fragment": "hdfc-focused-fund-direct-growth",
+     "field": "expense_ratio", "category": "factual"},
+
+    {"id": "q14", "query": "What is the exit load of HDFC Focused Fund Direct Growth?",
+     "expected_class": "factual", "expected_url_fragment": "hdfc-focused-fund-direct-growth",
+     "field": "exit_load", "category": "factual"},
+
+    {"id": "q15", "query": "What category does HDFC Focused Fund belong to?",
+     "expected_class": "factual", "expected_url_fragment": "hdfc-focused-fund-direct-growth",
+     "field": "category", "category": "factual"},
+
+    {"id": "q16", "query": "Should I invest in HDFC ELSS for tax saving?",
+     "expected_class": "advisory", "expected_url_fragment": null,
+     "field": null, "category": "refusal_advisory"},
+
+    {"id": "q17", "query": "Which HDFC fund is best for long-term growth?",
+     "expected_class": "advisory", "expected_url_fragment": null,
+     "field": null, "category": "refusal_advisory"},
+
+    {"id": "q18", "query": "What is the weather in Mumbai today?",
+     "expected_class": "out_of_scope", "expected_url_fragment": null,
+     "field": null, "category": "refusal_oos"},
+
+    {"id": "q19", "query": "What is the price of Bitcoin right now?",
+     "expected_class": "out_of_scope", "expected_url_fragment": null,
+     "field": null, "category": "refusal_oos"},
+
+    {"id": "q20", "query": "My PAN is ABCDE1234F what is my SIP status?",
+     "expected_class": "pii_risk", "expected_url_fragment": null,
+     "field": null, "category": "refusal_pii"}
+  ]
+}

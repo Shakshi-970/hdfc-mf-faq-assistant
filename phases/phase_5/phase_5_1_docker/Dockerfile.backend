@@ -1,0 +1,43 @@
+# Mutual Fund FAQ Assistant — FastAPI Backend
+# Build context: repo root
+#
+# Build:
+#   docker build -f phases/phase_5/phase_5_1_docker/Dockerfile.backend -t mf-faq-backend .
+#
+# Run:
+#   docker run -p 8000:8000 \
+#     -e ANTHROPIC_API_KEY=... \
+#     -e CHROMA_API_KEY=... \
+#     -e CHROMA_TENANT=... \
+#     -e CHROMA_DATABASE=... \
+#     mf-faq-backend
+
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Install build tools required by some Python packages (e.g. lxml, hiredis)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Python dependencies first (cached layer — only rebuilds on requirements change)
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Pre-download the embedding model into the image layer.
+# Avoids a ~130 MB cold-start download on first query.
+RUN python -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('BAAI/bge-small-en-v1.5')"
+
+# Copy application source (changes more frequently — comes after pip install)
+COPY phases/ ./phases/
+
+EXPOSE 8000
+
+# Docker health check — uses the bundled healthcheck script.
+# Starts checking 20 s after container starts; retries 3× before marking unhealthy.
+HEALTHCHECK --interval=30s --timeout=10s --start-period=20s --retries=3 \
+    CMD python phases/phase_5/phase_5_2_monitoring/healthcheck.py || exit 1
+
+# Start FastAPI via uvicorn (host 0.0.0.0 required inside Docker)
+CMD ["python", "-m", "phases.phase_3.phase_3_4_query_pipeline"]

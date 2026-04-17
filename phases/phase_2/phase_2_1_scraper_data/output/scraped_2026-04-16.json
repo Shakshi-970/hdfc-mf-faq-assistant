@@ -1,0 +1,144 @@
+[
+  {
+    "scheme_name": "HDFC Large Cap Fund Direct Growth",
+    "source_url": "https://groww.in/mutual-funds/hdfc-large-cap-fund-direct-growth",
+    "amc": "HDFC Mutual Fund",
+    "category": "Large Cap",
+    "fields": {
+      "nav": "432.78",
+      "min_sip": "₹100",
+      "aum": "₹32,450 Cr",
+      "expense_ratio": "1.28%",
+      "rating": "4",
+      "exit_load": "1% if redeemed within 1 year",
+      "min_lumpsum": "₹100",
+      "riskometer": "Very High",
+      "benchmark": "Nifty 100 TRI",
+      "fund_manager": "Rahul Baijal",
+      "fund_house": "HDFC Mutual Fund"
+    },
+    "free_text": [
+      "HDFC Large Cap Fund is an open-ended equity scheme predominantly investing in large cap stocks. The fund aims to generate long-term capital appreciation from a portfolio that is predominantly invested in equity and equity-related securities of large cap companies.",
+      "The fund follows a bottom-up stock selection approach with a focus on companies with strong competitive advantages, good management quality, and reasonable valuations. It maintains a well-diversified portfolio with exposure across various sectors."
+    ],
+    "scraped_at": "2026-04-16T09:15:42+05:30",
+    "ingestion_date": "2026-04-16",
+    "ingestion_time": "09:15",
+    "_changed": true,
+    "_is_new": true
+  },
+  {
+    "scheme_name": "HDFC Equity Fund Direct Growth",
+    "source_url": "https://groww.in/mutual-funds/hdfc-equity-fund-direct-growth",
+    "amc": "HDFC Mutual Fund",
+    "category": "Flexi Cap",
+    "fields": {
+      "nav": "1503.42",
+      "min_sip": "₹100",
+      "aum": "₹56,870 Cr",
+      "expense_ratio": "1.05%",
+      "rating": "4",
+      "exit_load": "1% if redeemed within 1 year",
+      "min_lumpsum": "₹100",
+      "riskometer": "Very High",
+      "benchmark": "Nifty 500 TRI",
+      "fund_manager": "Roshi Jain",
+      "fund_house": "HDFC Mutual Fund"
+    },
+    "free_text": [
+      "HDFC Equity Fund is a flexi cap fund that invests across large, mid, and small cap stocks. It is one of the oldest and most well-known mutual funds in India, with a track record spanning over two decades.",
+      "The fund adopts a value-oriented investment philosophy, seeking businesses available at a discount to their intrinsic value. The portfolio manager focuses on businesses with durable competitive advantages and strong cash flows."
+    ],
+    "scraped_at": "2026-04-16T09:15:43+05:30",
+    "ingestion_date": "2026-04-16",
+    "ingestion_time": "09:15",
+    "_changed": true,
+    "_is_new": true
+  },
+  {
+    "scheme_name": "HDFC ELSS Tax Saver Fund Direct Plan Growth",
+    "source_url": "https://groww.in/mutual-funds/hdfc-elss-tax-saver-fund-direct-plan-growth",
+    "amc": "HDFC Mutual Fund",
+    "category": "ELSS",
+    "fields": {
+      "nav": "1042.35",
+      "min_sip": "₹100",
+      "aum": "₹14,230 Cr",
+      "expense_ratio": "0.77%",
+      "rating": "4",
+      "exit_load": "Nil (mandatory lock-in of 3 years)",
+      "min_lumpsum": "₹500",
+      "riskometer": "Very High",
+      "benchmark": "Nifty 500 TRI",
+      "fund_manager": "Rahul Baijal, Dhruv Muchhal",
+      "fund_house": "HDFC Mutual Fund",
+      "lock_in": "3 years",
+      "tax_benefit": "Eligible for tax deduction under Section 80C up to ₹1.5 lakh per year"
+    },
+    "free_text": [
+      "HDFC ELSS Tax Saver Fund is an equity-linked savings scheme that offers the dual benefit of tax saving and long-term wealth creation. Investments qualify for deduction under Section 80C of the Income Tax Act, 1961.",
+      "The fund invests primarily in diversified equity instruments with a mandatory lock-in period of 3 years from the date of allotment. The shortest lock-in period among all Section 80C instruments makes it an attractive option for tax-conscious investors."
+    ],
+    "scraped_at": "2026-04-16T09:15:44+05:30",
+    "ingestion_date": "2026-04-16",
+    "ingestion_time": "09:15",
+    "_changed": true,
+    "_is_new": true
+  },
+  {
+    "scheme_name": "HDFC Mid-Cap Fund Direct Growth",
+    "source_url": "https://groww.in/mutual-funds/hdfc-mid-cap-fund-direct-growth",
+    "amc": "HDFC Mutual Fund",
+    "category": "Mid Cap",
+    "fields": {
+      "nav": "218.56",
+      "min_sip": "₹100",
+      "aum": "₹74,385 Cr",
+      "expense_ratio": "0.72%",
+      "rating": "5",
+      "exit_load": "1% if redeemed within 1 year",
+      "min_lumpsum": "₹100",
+      "riskometer": "Very High",
+      "benchmark": "Nifty Midcap 150 TRI",
+      "fund_manager": "Chirag Setalvad",
+      "fund_house": "HDFC Mutual Fund"
+    },
+    "free_text": [
+      "HDFC Mid-Cap Fund is an open-ended equity scheme predominantly investing in mid cap stocks. It is one of India's largest mid cap funds by assets under management and has delivered consistent long-term performance.",
+      "The fund follows a disciplined approach to identifying quality mid cap businesses at reasonable valuations. The fund manager focuses on companies with strong management, sustainable competitive advantages, and growth potential."
+    ],
+    "scraped_at": "2026-04-16T09:15:45+05:30",
+    "ingestion_date": "2026-04-16",
+    "ingestion_time": "09:15",
+    "_changed": true,
+    "_is_new": true
+  },
+  {
+    "scheme_name": "HDFC Focused Fund Direct Growth",
+    "source_url": "https://groww.in/mutual-funds/hdfc-focused-fund-direct-growth",
+    "amc": "HDFC Mutual Fund",
+    "category": "Focused",
+    "fields": {
+      "nav": "22.34",
+      "min_sip": "₹100",
+      "aum": "₹6,120 Cr",
+      "expense_ratio": "0.65%",
+      "rating": "3",
+      "exit_load": "1% if redeemed within 1 year",
+      "min_lumpsum": "₹100",
+      "riskometer": "Very High",
+      "benchmark": "Nifty 500 TRI",
+      "fund_manager": "Roshi Jain",
+      "fund_house": "HDFC Mutual Fund"
+    },
+    "free_text": [
+      "HDFC Focused Fund is an open-ended equity scheme investing in a maximum of 30 stocks across market capitalisation. The concentrated portfolio approach allows the fund manager to make high-conviction bets on select businesses.",
+      "The fund seeks to generate long-term capital appreciation by investing in a concentrated portfolio of equity and equity-related instruments. The focus is on finding high-quality businesses with significant growth potential at reasonable valuations."
+    ],
+    "scraped_at": "2026-04-16T09:15:46+05:30",
+    "ingestion_date": "2026-04-16",
+    "ingestion_time": "09:15",
+    "_changed": true,
+    "_is_new": true
+  }
+]

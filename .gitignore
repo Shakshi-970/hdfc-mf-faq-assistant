@@ -1,0 +1,37 @@
+# Environment — never commit secrets
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+env/
+*.egg-info/
+dist/
+build/
+
+# Sentence-transformers model cache
+.cache/
+
+# Runtime outputs (re-generated each run)
+scraper/output/
+scraper/snapshots/
+phases/phase_3/phase_3_2_chunking_embedding/embedded_chunks.json
+phases/phase_3/phase_3_2_chunking_embedding/last_run_report.json
+
+# Logs
+*.log
+logs/
+
+# Local vector store (Chroma data re-generated from Chroma Cloud)
+vector_store/
+
+# Frontend build artifacts and dependencies
+frontend/node_modules/
+frontend/.next/
+frontend/.env.local
+
+# Local editor / IDE config
+.claude/
