@@ -73,9 +73,18 @@ def _resolve_dotpath(data: dict[str, Any], dotpath: str) -> str | None:
         if current is None:
             return None
 
-    # Flatten lists (e.g. fund managers returned as a list of names)
+    # Flatten lists — extract name from fund manager objects or plain values
     if isinstance(current, list):
-        return ", ".join(str(item) for item in current if item)
+        names = []
+        for item in current:
+            if isinstance(item, dict):
+                name = (item.get("person_name") or item.get("name")
+                        or item.get("fundManagerName") or "")
+                if name:
+                    names.append(str(name))
+            elif item:
+                names.append(str(item))
+        return ", ".join(names) if names else None
 
     return str(current).strip() if current is not None else None
 

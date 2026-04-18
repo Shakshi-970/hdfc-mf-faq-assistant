@@ -147,11 +147,12 @@ FIELD_SELECTORS: dict[str, list[dict[str, str]]] = {
         {"type": "text_re",   "value": r"[Bb]enchmark[:\s]+(.+?)(?:\n|$)"},
     ],
     "fund_manager": [
+        {"type": "next_data", "value": "props.pageProps.mfServerSideData.fund_manager_details"},
+        {"type": "next_data", "value": "props.pageProps.schemeData.fundManagers"},
         {"type": "next_data", "value": "props.pageProps.mfServerSideData.fund_manager"},
         {"type": "data_attr", "value": "fundManager"},
         {"type": "css",       "value": "[class*='fundManager']"},
         {"type": "css",       "value": "[class*='managerName']"},
-        {"type": "next_data", "value": "props.pageProps.schemeData.fundManagers"},
         {"type": "text_re",   "value": r"[Ff]und [Mm]anager[:\s]+(.+?)(?:\n|$)"},
     ],
     "aum": [
