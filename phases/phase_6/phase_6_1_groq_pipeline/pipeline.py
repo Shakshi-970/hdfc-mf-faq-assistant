@@ -282,10 +282,14 @@ def run_query(session_id: str, query: str) -> dict:
     append_message(session_id, "user", query)
     append_message(session_id, "assistant", answer)
 
+    # Only expose source_url to the frontend when the bot couldn't answer —
+    # if the answer has real content, the citation pill should not appear.
+    cant_answer = bool(_NO_INFO_PATTERNS.search(answer))
+
     return {
         "answer": answer,
-        "source_url": source_url,
-        "last_updated": ingestion_date,
+        "source_url": source_url if cant_answer else None,
+        "last_updated": ingestion_date if cant_answer else None,
         "query_class": query_class,
         "llm_provider": llm.provider_name,
         "session_id": session_id,
