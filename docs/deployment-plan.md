@@ -5,7 +5,7 @@
 | Layer | Platform | Purpose |
 |---|---|---|
 | Daily ingestion scheduler | GitHub Actions | Scrape → chunk → embed → upsert to Chroma Cloud |
-| Backend API | Railway | FastAPI + Groq LLM query pipeline |
+| Backend API | Render | FastAPI + Groq LLM query pipeline |
 | Frontend UI | Vercel | Next.js 14 chat interface |
 
 ---
