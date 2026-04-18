@@ -35,3 +35,4 @@ frontend/.env.local
 
 # Local editor / IDE config
 .claude/
+docs/linkedin-post.md
