@@ -5,7 +5,7 @@
 The Mutual Fund FAQ Assistant is a **Retrieval-Augmented Generation (RAG)** system that answers factual queries about mutual fund schemes using exclusively official public sources. The architecture is designed to be:
 
 - **Facts-only**: No investment advice, recommendations, or opinions
-- **Source-transparent**: Every answer cites exactly one verifiable source link
+- **Source-transparent**: Source link is provided only when the bot cannot find a relevant answer, directing users to the official page
 - **Compliant**: Aligned with SEBI/AMFI data standards
 - **Multi-threaded**: Capable of handling multiple independent chat sessions simultaneously
 
@@ -286,7 +286,8 @@ SCHEDULER fires at 09:15 AM IST
 │                   │   Min Lumpsum        [data-field="minLumpsum"]
 │                   │   Riskometer         [data-field="riskLevel"]
 │                   │   Benchmark Index    [data-field="benchmark"]
-│                   │   Fund Manager       [data-field="fundManager"]
+│                   │   Fund Manager       mfServerSideData.fund_manager_details[].person_name
+│                   │                   (via __NEXT_DATA__ JSON — current managers)
 │                   │   AUM                [data-field="aum"]
 │                   │   Category           [data-field="category"]
 │                   │   Lock-in Period     [data-field="lockIn"]
@@ -343,8 +344,8 @@ SCHEDULER fires at 09:15 AM IST
 │  Upsert           │   • Host    : api.trychroma.com (HTTPS)
 │                   │   • Auth    : CHROMA_API_KEY secret
 │                   │   • Collection: mf_faq_chunks
-│                   │   • Strategy: upsert by chunk_id
-│                   │     → old chunk for same field replaced with new
+│                   │   • Strategy: delete-by-scheme-name then insert
+│                   │     → stale chunks purged before new ones added
 │                   │   • Payload : chunk text + full metadata JSON
 │                   │   • After upsert: write snapshot for diff check
 └───────────────────┘
@@ -434,9 +435,25 @@ Last updated from sources: <ingestion_date>
 
 The LLM output is post-processed to enforce:
 - 3-sentence cap (truncate at 3rd sentence boundary)
-- Exactly one citation link present
-- Footer injection: `Last updated from sources: YYYY-MM-DD`
+- Source URL included **only** when the bot cannot answer (no-info patterns detected); omitted for successful factual answers
 - Strip any advisory language detected in output (guardrail pass)
+
+---
+
+**Step 2.5 — Phase 12: Ambiguous Scheme Clarification + Real-time NAV Redirect**
+
+For factual queries, two additional checks run before retrieval:
+- **Ambiguous scheme**: if the query mentions "HDFC" without a specific scheme, the assistant asks a clarifying question listing the 5 in-scope funds
+- **Real-time NAV**: if the query asks for live/today's NAV, the assistant redirects to the Groww scheme page (scraped NAV is from the last ingestion, not live)
+
+**Phase 10 — Rate Limiting + Request Cache**
+
+- **Rate Limiting**: `RateLimitMiddleware` applied globally; limits excessive requests per IP
+- **Request Cache**: in-memory LRU cache (256 entries, 1-hr TTL) keyed by SHA-256 of the normalised query; bypasses retrieval + LLM for repeated identical queries; refusals and errors are never cached
+
+**Phase 11 — Privacy-Safe Audit Logging**
+
+All query events are logged with `session_id`, `query_class`, and `llm_provider` only — no query text or user-identifiable data is written to logs.
 
 ---
 
@@ -503,7 +520,7 @@ All content is scraped exclusively from the 5 Groww scheme pages listed below. N
 | Layer | Technology | Rationale |
 |---|---|---|
 | LLM | `llama-3.3-70b-versatile` via **Groq** (Phase 6 default); `claude-sonnet-4-6` via Anthropic (Phase 3 fallback) | Ultra-low latency (~200 ms) on Groq LPU hardware; switch providers via `LLM_PROVIDER` env var; `MAX_TOKENS=512` |
-| Embedding Model | `BAAI/bge-small-en-v1.5` (local CPU, sentence-transformers) | No API key required; 384-dim; strong retrieval performance |
+| Embedding Model | `BAAI/bge-small-en-v1.5` — **fastembed** (ONNX, ~100 MB RAM) with sentence-transformers fallback | ONNX runtime avoids PyTorch overhead; fits Render 512 MB free tier; 384-dim vectors |
 | Vector Store | Chroma Cloud (`trychroma.com`) | Fully managed, persistent, no self-hosted infra; `chromadb.CloudClient` |
 | Scheduler | GitHub Actions (`daily_ingestion.yml`) | Cron `45 3 * * *` (09:15 AM IST); GitHub-hosted runner; `workflow_dispatch` for manual runs; email alerts on failure |
 | Scraping Service | `httpx` (async HTTP) + `BeautifulSoup4` (HTML parse) | Async concurrent fetch of 5 URLs; polite rate limiting; 3-retry exponential backoff |
@@ -514,7 +531,7 @@ All content is scraped exclusively from the 5 Groww scheme pages listed below. N
 | Query Pipeline | Custom Python orchestration (classifier → rewriter → retriever → prompt → LLM) | No LangChain/LlamaIndex dependency; direct `chromadb` + `anthropic` SDK calls |
 | Session State | In-memory dict (dev) / Redis (prod) | Multi-thread isolation; UUID-keyed; 30-min TTL; controlled by `REDIS_URL` env var |
 | API Layer | FastAPI + uvicorn | `GET /health`, `POST /sessions/new`, `POST /chat/{session_id}`, `DELETE /sessions/{session_id}` |
-| UI | Streamlit (`phases/phase_3_6_ui/`) | Disclaimer banner, welcome message, 8 example questions, chat bubbles, source citation footer |
+| UI | **Next.js 14** + Tailwind CSS — deployed on **Vercel** | Light HDFC-branded theme; chat bubbles; scheme name Tab autocomplete; source link shown only on no-info answers |
 | Guardrails | Rule-based classifier refusals (pre-retrieval) | Advisory/PII/out-of-scope caught at Step 1 before any LLM call; no post-generation scanning |
 
 ---
@@ -603,18 +620,18 @@ Every factual answer must conform to:
 {answer}         ← max 3 sentences, grounded in retrieved context
                     no advisory language, no performance predictions
 
-Source: {url}    ← exactly one official URL from chunk metadata
-
-Last updated from sources: {YYYY-MM-DD}
+[Source: {url}]  ← only included when bot cannot find relevant info
 ```
 
-**Example:**
+**Example — successful answer (no source link):**
 
 > The HDFC ELSS Tax Saver Fund has a mandatory lock-in period of 3 years from the date of each SIP installment, as mandated under Section 80C of the Income Tax Act. The minimum SIP investment amount is ₹500 per month. Investments qualify for a tax deduction of up to ₹1.5 lakh per financial year under Section 80C.
+
+**Example — no-info answer (source link shown):**
+
+> I could not find relevant information for your query in the available data. Please check the Groww scheme pages directly for the latest details.
 >
 > Source: https://groww.in/mutual-funds/hdfc-elss-tax-saver-fund-direct-plan-growth
->
-> Last updated from sources: 2026-04-16
 
 ---
 
@@ -685,60 +702,60 @@ Each `session_id` is a server-generated UUID. The client stores only this token 
                                  ▼
   ┌──────────────────────────────────────────────────────────────────┐
   │                    SCRAPING SERVICE                              │
-  │                                                                  │
-  │  URL Dispatcher ──► 5 async httpx tasks (concurrent)            │
-  │       │                                                          │
-  │       ▼                                                          │
-  │  HTTP Fetcher  →  HTML Parser  →  Change Detector               │
-  │  (httpx async)    (BS4)           (diff vs snapshot)            │
-  │       │                                                          │
-  │       ▼  (changed content only)                                  │
-  │  Chunker  →  Metadata Tagger  →  Embedder      →  Vector Store   │
-  │  (512/64)    (url, scheme,        (bge-small-       Upsert       │
-  │               field_type,          en-v1.5,         Chroma Cloud │
-  │               date, time)          384-dim)         + snapshot   │
+  │  5 async httpx tasks → BeautifulSoup4 parser → diff check       │
+  │  → delete stale chunks → chunk + embed (fastembed ONNX)         │
+  │  → upsert to Chroma Cloud + write last_run_report.json          │
   └──────────────────────────────┬───────────────────────────────────┘
                                  │  writes to
                                  ▼
-                       ┌──────────────────┐
-                       │   Vector DB      │◄──────────────────────┐
-                       │  (Chroma Cloud   │                       │
-                       │   trychroma.com) │                       │
-                       └──────────────────┘                       │
-                                                                   │ reads
-                        ┌─────────────┐                           │
-                        │   Client    │                           │
-                        │ (Browser /  │                           │
-                        │  Mobile)    │                           │
-                        └──────┬──────┘                           │
-                               │ HTTPS                            │
-                               ▼                                  │
-                    ┌──────────────────────┐                      │
-                    │   API Gateway /      │                      │
-                    │   Load Balancer      │                      │
-                    └──────────┬───────────┘                      │
-                               │                                  │
-              ┌────────────────┼─────────────────┐               │
-              ▼                ▼                  ▼               │
-      ┌──────────────┐ ┌──────────────┐  ┌──────────────┐        │
-      │  FastAPI     │ │  FastAPI     │  │  FastAPI     │        │
-      │  Instance 1  │ │  Instance 2  │  │  Instance N  │        │
-      └──────┬───────┘ └──────┬───────┘  └──────┬───────┘        │
-             │                │                  │                │
-             └────────────────┼──────────────────┘                │
-                              │                                    │
-               ┌──────────────┼──────────────┐                    │
-               ▼              ▼              ▼                    │
-      ┌──────────────┐ ┌──────────────┐ ┌──────────────┐         │
-      │  Vector DB   │ │  Redis       │ │  LLM API     │         │
-      │  (Chroma     │ │  Session     │ │  (Groq /     │         │
-      │   Cloud)     │ │  Store       │ │   Claude)    │         │
-      └──────┬───────┘ └──────────────┘ └──────────────┘         │
-             └──────────────────────────────────────────────────┘
+                       ┌──────────────────────┐
+                       │   Chroma Cloud       │
+                       │  (trychroma.com)     │
+                       │  collection:         │
+                       │  mf_faq_chunks       │
+                       └──────────┬───────────┘
+                                  │ reads
+  ┌──────────────────┐            │
+  │  Frontend        │            │
+  │  Next.js 14      │            │
+  │  Vercel          │            │
+  │  (auto-deploy    │            │
+  │   on git push)   │            │
+  └────────┬─────────┘            │
+           │ HTTPS                │
+           │ (NEXT_PUBLIC_API_URL) │
+           ▼                      │
+  ┌──────────────────────────────────────────────────────────────────┐
+  │                    FastAPI Backend                               │
+  │             Render (Singapore region, free tier)                 │
+  │         https://hdfc-mf-faq-assistant.onrender.com              │
+  │                                                                  │
+  │  Phase 10 — Rate Limiting middleware (per-IP)                    │
+  │  Phase 10 — In-memory LRU Request Cache (1-hr TTL, 256 entries) │
+  │                          │                                       │
+  │   POST /chat/{id} → Classifier → Rewriter → Retriever           │
+  │                     → Phase 12 (ambiguity / NAV redirect)        │
+  │                     → Prompt Builder → Groq LLM                 │
+  │                     → Post-gen Guardrail → Formatter             │
+  │                     → Phase 11 Audit Log (no query text stored)  │
+  │                                                                  │
+  │  Embedding: fastembed ONNX (~100 MB RAM)                         │
+  │  LLM: Groq llama-3.3-70b-versatile                              │
+  └──────────────────────────────────────────────────────────────────┘
 ```
+
+**Environment Variables**
+
+| Variable | Where | Purpose |
+|---|---|---|
+| `GROQ_API_KEY` | Render secret | Groq LLM API access |
+| `CHROMA_API_KEY` | Render secret + GH secret | Chroma Cloud auth |
+| `CHROMA_TENANT` | Render var + GH var | Chroma tenant ID |
+| `CHROMA_DATABASE` | Render var + GH var | Chroma database name |
+| `NEXT_PUBLIC_API_URL` | Vercel env | Backend URL for frontend |
 
 ---
 
-*Document generated: 2026-04-16*
+*Document generated: 2026-04-16 | Last updated: 2026-04-19*
 *Scope: Mutual Fund FAQ Assistant — RAG Architecture Design*
 *Reference: problemStatement.md*
