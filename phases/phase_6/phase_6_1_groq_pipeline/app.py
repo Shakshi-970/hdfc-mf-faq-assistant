@@ -41,6 +41,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
 from .pipeline import run_query, _get_llm
+from phases.phase_8.phase_8_1_response_formatter.formatter import _NO_INFO_PATTERNS
 from phases.phase_3.phase_3_4_query_pipeline.retriever import (
     _get_collection,
     _get_model,
@@ -238,11 +239,12 @@ def chat(session_id: str, request: ChatRequest):
     cached = get_cached_response(query)
     if cached:
         logger.debug("Cache hit for session=%s query='%.50s'", session_id, query)
+        cant_answer = bool(_NO_INFO_PATTERNS.search(cached.get("answer", "")))
         return ChatResponse(
             session_id=session_id,
             answer=cached["answer"],
-            source_url=cached.get("source_url"),
-            last_updated=cached.get("last_updated"),
+            source_url=cached.get("source_url") if cant_answer else None,
+            last_updated=cached.get("last_updated") if cant_answer else None,
             query_class=cached.get("query_class"),
             llm_provider=cached.get("llm_provider"),
         )
