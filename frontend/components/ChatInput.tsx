@@ -10,11 +10,29 @@ const SCHEME_NAMES = [
   'HDFC Focused Fund Direct Growth',
 ]
 
-function getSuggestion(input: string): string | null {
+interface Suggestion {
+  completedValue: string
+  append: string
+}
+
+function getSuggestion(input: string): Suggestion | null {
   if (!input.trim()) return null
-  const lower = input.toLowerCase()
-  const match = SCHEME_NAMES.find(s => s.toLowerCase().startsWith(lower))
-  return match && match.toLowerCase() !== lower ? match : null
+  // Try each suffix of the input (longest first) to find a scheme name prefix match
+  for (let i = 0; i < input.length; i++) {
+    const suffix = input.slice(i)
+    if (suffix.length < 3) break
+    const lower = suffix.toLowerCase()
+    const match = SCHEME_NAMES.find(
+      s => s.toLowerCase().startsWith(lower) && s.toLowerCase() !== lower
+    )
+    if (match) {
+      return {
+        completedValue: input.slice(0, i) + match,
+        append: match.slice(suffix.length),
+      }
+    }
+  }
+  return null
 }
 
 interface ChatInputProps {
@@ -53,7 +71,7 @@ export default function ChatInput({ onSend, disabled }: ChatInputProps) {
   const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Tab' && suggestion) {
       e.preventDefault()
-      setValue(suggestion)
+      setValue(suggestion.completedValue)
       autoResize()
       return
     }
@@ -71,10 +89,10 @@ export default function ChatInput({ onSend, disabled }: ChatInputProps) {
         <div className="relative flex items-end gap-2 bg-white rounded-2xl px-4 py-3 border border-border focus-within:border-hdfc-blue/50 focus-within:shadow-sm transition-all duration-150">
           <div className="flex-1 relative">
             {suggestion && (
-              <div className="absolute inset-0 flex items-center pointer-events-none">
-                <span className="text-sm leading-6 whitespace-pre">
+              <div className="absolute inset-0 flex items-start pointer-events-none pt-0">
+                <span className="text-sm leading-6 whitespace-pre-wrap break-words w-full">
                   <span className="text-transparent">{value}</span>
-                  <span className="text-gray-300">{suggestion.slice(value.length)}</span>
+                  <span className="text-gray-300">{suggestion.append}</span>
                 </span>
               </div>
             )}
@@ -112,9 +130,6 @@ export default function ChatInput({ onSend, disabled }: ChatInputProps) {
             )}
           </button>
         </div>
-        <p className="text-xs text-gray-400 text-center mt-2">
-          Press Enter to send · Tab to autocomplete scheme name
-        </p>
       </div>
     </div>
   )
