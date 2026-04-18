@@ -25,8 +25,9 @@ tiktoken==0.12.0
 # LangChain text splitter — RecursiveCharacterTextSplitter
 langchain-text-splitters==0.3.11
 
-# Embedding model for retrieval — ONNX-based, ~100 MB RAM (replaces sentence-transformers on backend)
+# Embedding model — fastembed (ONNX) used on Render; falls back to sentence-transformers locally
 fastembed>=0.3.6
+sentence-transformers==5.4.1
 
 # Vector store — Chroma Cloud (remote ChromaDB)
 chromadb==1.5.7

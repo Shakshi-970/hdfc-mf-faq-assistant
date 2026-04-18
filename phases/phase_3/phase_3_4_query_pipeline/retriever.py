@@ -44,19 +44,28 @@ _collection = None
 def _get_model():
     global _model
     if _model is None:
-        from fastembed import TextEmbedding
-        logger.info("Loading embedding model '%s' via fastembed...", EMBEDDING_MODEL)
-        _model = TextEmbedding(EMBEDDING_MODEL)
+        try:
+            from fastembed import TextEmbedding
+            logger.info("Loading embedding model '%s' via fastembed...", EMBEDDING_MODEL)
+            _model = ("fastembed", TextEmbedding(EMBEDDING_MODEL))
+        except Exception:
+            from sentence_transformers import SentenceTransformer
+            logger.info("fastembed unavailable, loading via sentence-transformers...")
+            _model = ("sentence_transformers", SentenceTransformer(EMBEDDING_MODEL))
         logger.info("Embedding model loaded.")
     return _model
 
 
 def _embed_query(query: str) -> list[float]:
-    """Embed query with BGE query prefix via fastembed. Returns a 384-dim float list."""
-    model = _get_model()
-    # fastembed.query_embed() adds the BGE query prefix internally
-    vectors = list(model.query_embed([query]))
-    return vectors[0].tolist()
+    """Embed query with BGE query prefix. Returns a 384-dim float list."""
+    kind, model = _get_model()
+    if kind == "fastembed":
+        vectors = list(model.query_embed([query]))
+        return vectors[0].tolist()
+    else:
+        prefixed = BGE_QUERY_PREFIX + query
+        vector = model.encode(prefixed, convert_to_numpy=True, show_progress_bar=False)
+        return vector.tolist()
 
 
 # ---------------------------------------------------------------------------
