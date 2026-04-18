@@ -90,6 +90,17 @@ def _upsert_chroma_cloud(chunks: list[EmbeddedChunk]) -> int:
         metadata={"hnsw:space": "cosine"},
     )
 
+    # Delete all existing chunks per scheme before upserting fresh ones.
+    # This removes stale chunks (e.g. old fund manager names) that would
+    # otherwise persist in the collection alongside the new chunks.
+    scheme_names = list({c.metadata.get("scheme_name") for c in chunks if c.metadata.get("scheme_name")})
+    for scheme in scheme_names:
+        existing = collection.get(where={"scheme_name": {"$eq": scheme}}, include=[])
+        old_ids = existing.get("ids", [])
+        if old_ids:
+            collection.delete(ids=old_ids)
+            logger.info("Deleted %d stale chunk(s) for scheme '%s'.", len(old_ids), scheme)
+
     ids = [c.chunk_id for c in chunks]
     embeddings = [c.vector for c in chunks]
     documents = [c.text for c in chunks]
