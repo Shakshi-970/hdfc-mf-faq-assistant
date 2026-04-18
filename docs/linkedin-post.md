@@ -31,6 +31,8 @@ The last two are my favourite — that's where most assistants fail.
 
 🎨 I also designed the UI to feel HDFC-native — white, minimal, clean. Because in financial products, design is trust.
 
+One small detail I'm proud of: type "HDFC L" in the chat box and it ghost-suggests "HDFC Large Cap Fund Direct Growth" — press Tab to complete. Small UX touch, but it makes the product feel intentional.
+
 ---
 
 🛠️ Stack & Why
