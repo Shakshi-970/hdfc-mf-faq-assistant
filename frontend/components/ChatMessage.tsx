@@ -68,7 +68,7 @@ export default function ChatMessage({ message }: ChatMessageProps) {
     return (
       <div className="flex justify-end">
         <div className="flex flex-col items-end gap-1 max-w-[75%]">
-          <div className="bg-hdfc-blue text-white rounded-2xl rounded-tr-sm px-4 py-2.5 text-sm leading-relaxed shadow-sm">
+          <div className="bg-hdfc-blueDeep text-white rounded-2xl rounded-tr-sm px-4 py-2.5 text-sm leading-relaxed shadow-sm">
             {message.content}
           </div>
           <span className="text-xs text-gray-400 pr-1">
